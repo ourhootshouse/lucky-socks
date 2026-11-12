@@ -233,7 +233,7 @@ test('lineupCheck is quiet for a healthy, optimal lineup', () => {
   assert.equal(lc.flags.length, 0);
   assert.equal(lc.moves.length, 0);
   assert.equal(lc.jinx, 0);
-  assert.equal(C.jinxLabel(0), 'Blessed 😇');
+  assert.equal(C.jinxLabel(0), 'All clear');
 });
 
 test('lineupCheck flags a starter projected well below an eligible bench player', () => {
@@ -437,11 +437,13 @@ test('buildIcs makes weekly recurring Thu 6PM / Sun 11AM ET events with alarms u
   assert.ok(!/[^\r]\n/.test(ics), 'CRLF only');
   const uids = ics.match(/UID:.*/g);
   assert.equal(new Set(uids).size, 2);
+  assert.match(ics, /Agent 89/);
+  assert.match(ics, /Mission briefing/);
 });
 
 // ---------------------------------------------------------------- flavor
-test('superstition tips are deterministic with an injected rng and always carry real advice', () => {
-  assert.equal(C.pickSuperstition(() => 0).title, 'The Lucky Socks');
+test('scouting briefings are deterministic with an injected rng and always carry real advice', () => {
+  assert.equal(C.pickSuperstition(() => 0).title, 'Agent 89');
   assert.ok(C.pickSuperstition(() => 0.999999).advice);
   for (const s of C.SUPERSTITIONS) assert.ok(s.tip && s.advice && s.emoji);
 });
