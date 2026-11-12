@@ -3,11 +3,31 @@
 const puppeteer = require('/workspace/shotkit/node_modules/puppeteer-core');
 const fs = require('fs');
 const BASE = process.env.BASE || 'http://localhost:8795/index.html';
-const SHOTS = '/workspace/luckysocks-shots';
+const SHOTS = '/workspace/agent89-shots';
 fs.mkdirSync(SHOTS, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
 const check = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); if (!cond) failures++; };
+
+async function assertNoClip(page, label) {
+  const issues = await page.evaluate(() => {
+    const out = [];
+    const brand = document.querySelector('.brand b');
+    if (brand) {
+      if (brand.innerText.replace(/\s+/g, ' ').trim() !== 'Agent 89') out.push('brand text: ' + JSON.stringify(brand.innerText));
+      if (brand.scrollWidth > brand.clientWidth + 1) out.push('brand clipped ' + brand.scrollWidth + '>' + brand.clientWidth);
+    }
+    const sel = 'h1, h2, h3, .verdict .v, .tabs button span, .btn';
+    for (const el of document.querySelectorAll(sel)) {
+      const cs = getComputedStyle(el);
+      if (el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 2 && (cs.whiteSpace === 'nowrap' || cs.textOverflow === 'ellipsis' || cs.overflowX === 'hidden')) {
+        out.push(((el.innerText || '').trim().slice(0, 48) || el.tagName) + ' (' + el.scrollWidth + '>' + el.clientWidth + ')');
+      }
+    }
+    return out;
+  });
+  check(issues.length === 0, label + ' no clipped text' + (issues.length ? ': ' + issues.join('; ') : ''));
+}
 
 async function waitText(page, sel, re, timeout = 30000) {
   await page.waitForFunction((sel, re) => { const el = document.querySelector(sel); return el && new RegExp(re).test(el.innerText); }, { timeout }, sel, re.source || re);
@@ -40,8 +60,10 @@ async function run(name, vp, mobile) {
   check(pwa.display === 'standalone' && pwa.sizes.join() === '192x192:any,512x512:any,512x512:maskable', 'manifest + PNG icons ok ' + JSON.stringify(pwa.sizes));
   check(pwa.sw, 'service worker active');
   check(pwa.theme === 'dark', 'dark theme applied');
-  check(await page.$eval('.foot', (e) => e.innerText.includes('Not affiliated with ESPN or the NFL.')), 'footer disclaimer present');
-  check(await page.$eval('.hero h1', (e) => /Lucky Socks/.test(e.innerText)), 'connect hero shown with no leagues');
+  check(await page.$eval('.foot', (e) => e.innerText.includes('Fan-made. Not affiliated with the NFL, ESPN, or any team.')), 'footer disclaimer present');
+  check(await page.$eval('.hero h1', (e) => /Agent 89/.test(e.innerText)), 'connect hero shown with no leagues');
+  check(await page.$eval('.brand b', (e) => e.innerText.trim() === 'Agent 89' && e.scrollWidth <= e.clientWidth + 1), 'header title Agent 89 is fully visible');
+  await assertNoClip(page, 'connect');
   await shot('1-connect');
 
   // ---- demo league (real API)
@@ -50,10 +72,11 @@ async function run(name, vp, mobile) {
   await waitText(page, '#view', /Lineup check/);
   check(await page.$eval('#view', (e) => /FFLR Test League/.test(e.innerText)), 'demo league loaded from ESPN');
   check((await page.$$('.pl')).length >= 14, 'roster rows rendered');
-  check(await page.$eval('.jinx', (e) => /jinx \d+%/.test(e.innerText)), 'jinx meter visible');
+  check(await page.$eval('.meter', (e) => /risk \d+%/.test(e.innerText)), 'risk meter visible');
   const txt = await page.$eval('#view', (e) => e.innerText);
   check(/OUT|IR/.test(txt) && /BYE|vs |@ /.test(txt), 'injury badges + opponents shown');
   check(/Suggested swaps/i.test(txt), 'lineup check suggests swaps for the demo roster');
+  await assertNoClip(page, 'team');
   await shot('2-team');
   await shot('2-team-full', true);
 
@@ -68,7 +91,8 @@ async function run(name, vp, mobile) {
   await page.click('[data-act="evaluate"]'); await page.waitForSelector('#result');
   await sleep(600);
   const res = await page.$eval('#result', (e) => e.innerText);
-  check(/Lucky Socks approve|Jinx alert|Even steven|Small edge|Slightly cursed/.test(res) && /why/i.test(res) && /pts\/week/.test(res), 'trade verdict + reasons rendered');
+  check(/Ice up, son|Keep pounding|Dead even|Shaky intel|Fumble/.test(res) && /why/i.test(res) && /pts\/week/.test(res), 'trade verdict + reasons rendered');
+  await assertNoClip(page, 'trade result');
   await shot('3-trade-result');
   await page.evaluate(() => document.getElementById('result').scrollIntoView());
   await shot('3-trade-result-card');
@@ -78,7 +102,7 @@ async function run(name, vp, mobile) {
   // ---- ideas
   await clickTab(page, 'ideas');
   await waitText(page, '#view', /Position report/);
-  await page.waitForFunction(() => /Trade ideas/.test(document.getElementById('view').innerText), { timeout: 20000 });
+  await page.waitForFunction(() => /\bIntel\b/.test(document.getElementById('view').innerText), { timeout: 20000 });
   const ideaCount = (await page.$$('[data-act="open-idea"]')).length;
   check(ideaCount >= 3 && ideaCount <= 5, `3-5 trade ideas (${ideaCount})`);
   await shot('4-ideas'); await shot('4-ideas-full', true);
