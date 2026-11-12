@@ -1,4 +1,5 @@
 // End-to-end: real browser -> real local Worker runtime (wrangler dev on :8787) -> real ESPN.
+// Note: setting ls.relay only works when config.js RELAY_URL is empty; a set RELAY_URL always wins.
 // The demo league is public, so bogus cookies are simply ignored by ESPN; this proves routing, headers, CORS, filters.
 const puppeteer = require('/workspace/shotkit/node_modules/puppeteer-core');
 (async () => {

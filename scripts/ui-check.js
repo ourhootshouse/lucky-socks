@@ -63,8 +63,13 @@ async function run(name, vp, mobile) {
   check(await page.$eval('.foot', (e) => e.innerText.includes('Fan-made. Not affiliated with the NFL, ESPN, or any team.')), 'footer disclaimer present');
   check(await page.$eval('.hero h1', (e) => /Agent 89/.test(e.innerText)), 'connect hero shown with no leagues');
   check(await page.$eval('.brand b', (e) => e.innerText.trim() === 'Agent 89' && e.scrollWidth <= e.clientWidth + 1), 'header title Agent 89 is fully visible');
+  await page.waitForFunction(() => /Private leagues: secure relay connected/.test(document.getElementById('view').innerText), { timeout: 15000 });
+  const connectTxt = await page.$eval('#view', (e) => e.innerText);
+  check(!/Relay \(private leagues\)/.test(connectTxt) && !/Relay URL/.test(connectTxt) && !(await page.$('#relay')), 'relay URL field and Test button hidden');
+  check(/Private leagues: secure relay connected/.test(connectTxt), 'relay status line shown');
   await assertNoClip(page, 'connect');
   await shot('1-connect');
+  if (mobile) await page.screenshot({ path: SHOTS + '/mobile-leagues-norelay.png', fullPage: true });
 
   // ---- demo league (real API)
   await page.click('[data-act="demo"]');
@@ -133,25 +138,31 @@ async function run(name, vp, mobile) {
   const priv = await page.$eval('#view', (e) => e.innerText);
   check(/LM Tools/.test(priv) && /Basic Settings/.test(priv) && /espn_s2/.test(priv), 'private-league explainer (public setting + cookies)');
   await shot('7-private-explainer', true);
-  // saved league list + relay card
-  check(/Relay \(private leagues\)/.test(priv), 'relay settings card present');
+  // saved league list; relay URL field stays hidden
+  check(!/Relay \(private leagues\)/.test(priv) && !/Relay URL/.test(priv) && !(await page.$('#relay')), 'relay URL field still hidden after private lookup');
+  check(/Private leagues: secure relay connected/.test(priv), 'relay status line still shown');
   check(errors.filter((e) => !/401|Failed to load resource/.test(e)).length === 0, 'no console/page errors in main flows' + (errors.length ? ': ' + errors.join(' | ') : ''));
 
   // ---- private league via mocked relay (verifies the cookie headers reach the relay, public league data stands in)
   console.log('  -- relay flow');
   await page.setRequestInterception(true);
+  const RELAY = 'https://lucky-socks-relay.ourhootshouse.workers.dev';
   const relayCalls = [];
   page.on('request', async (req) => {
     const u = req.url();
-    if (!u.startsWith('http://relay.test')) return req.continue();
+    if (!u.startsWith(RELAY) && !u.startsWith('http://relay.test')) return req.continue();
     if (req.method() === 'OPTIONS') return req.respond({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } });
+    if (new URL(u).pathname === '/health') {
+      return req.respond({ status: 200, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' }, body: JSON.stringify({ ok: true, service: 'lucky-socks-relay' }) });
+    }
     const h = req.headers();
-    relayCalls.push({ s2: h['x-espn-s2'], swid: h['x-espn-swid'], path: new URL(u).searchParams.get('path') });
+    relayCalls.push({ s2: h['x-espn-s2'], swid: h['x-espn-swid'], path: new URL(u).searchParams.get('path'), host: new URL(u).origin });
     const path = new URL(u).searchParams.get('path');
     const f = h['x-fantasy-filter'];
     const r = await fetch('https://lm-api-reads.fantasy.espn.com' + path.replace('1066964', '42654852'), { headers: f ? { 'X-Fantasy-Filter': f } : {} });
     req.respond({ status: r.status, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' }, body: await r.text() });
   });
+  // leftover ls.relay must be ignored when config RELAY_URL is set
   await page.evaluate(() => localStorage.setItem('ls.relay', JSON.stringify('http://relay.test')));
   await page.reload({ waitUntil: 'networkidle2' });
   await clickTab(page, 'leagues');
@@ -167,6 +178,7 @@ async function run(name, vp, mobile) {
   await page.waitForSelector('.card.tip', { timeout: 40000 });
   check(relayCalls.length >= 3 && relayCalls.every((c) => /^AEBx/.test(c.s2) && c.swid === '{1A2B3C4D-1111-2222-3333-ABCDEF012345}'), `private league requests went via relay with cookie headers (${relayCalls.length} calls)`);
   check(relayCalls.every((c) => c.path.startsWith('/apis/v3/games/ffl/')), 'relay only receives ESPN ffl paths');
+  check(relayCalls.length >= 3 && relayCalls.every((c) => c.host === RELAY), 'stale ls.relay did not override config RELAY_URL');
   const stored = await page.evaluate(() => localStorage.getItem('ls.leagues'));
   check(/"s2":"AEBx/.test(stored), 'cookies stored per league in localStorage');
   await clickTab(page, 'leagues');
@@ -178,6 +190,12 @@ async function run(name, vp, mobile) {
   // ---- light mode
   await page.click('#themeBtn'); await clickTab(page, 'team'); await sleep(300);
   await shot('10-team-light');
+
+  // escape hatch: ?relay=1 reveals the otherwise hidden field
+  await page.goto(BASE + '?relay=1&nc=' + Date.now(), { waitUntil: 'networkidle2' });
+  await clickTab(page, 'leagues');
+  check(!!(await page.$('#relay')) && /Relay URL/.test(await page.$eval('#view', (e) => e.innerText)), 'relay field visible with ?relay=1');
+
   await browser.close();
   return errors;
 }
