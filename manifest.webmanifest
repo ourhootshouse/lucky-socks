@@ -1,13 +1,13 @@
 {
-  "name": "Lucky Socks — Fantasy Football GM",
-  "short_name": "Lucky Socks",
-  "description": "A superstitious fantasy football GM assistant: lineup checks, trade grades, trade ideas, waiver picks.",
+  "name": "Agent 89",
+  "short_name": "Agent 89",
+  "description": "A fantasy football scouting desk: lineup checks, trade grades, intel and waiver picks.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f1220",
-  "theme_color": "#0f1220",
+  "background_color": "#070d18",
+  "theme_color": "#070d18",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

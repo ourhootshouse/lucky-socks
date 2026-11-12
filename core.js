@@ -1,4 +1,4 @@
-/* Lucky Socks core — pure analysis logic (no DOM, no network).
+/* Agent 89 core — pure analysis logic (no DOM, no network).
  * Works in the browser (window.LuckyCore) and in Node (require). */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -434,7 +434,7 @@
     };
   }
 
-  function jinxLabel(j) { return j >= 66 ? 'Cursed 💀' : j >= 33 ? 'Rattled 😬' : j > 0 ? 'Mild jitters 🤞' : 'Blessed 😇'; }
+  function jinxLabel(j) { return j >= 66 ? 'Red alert' : j >= 33 ? 'Coverage issues' : j > 0 ? 'Watch the film' : 'All clear'; }
 
   // -------------------------------------------------------------------- trades
   function sideEval(before, after, ctx) {
@@ -444,11 +444,11 @@
     return { before: b, after: a, delta: a.total - b.total, perWeek: (a.total - b.total) / ctx.nominalGames, posDelta };
   }
   const verdictFor = (perWeek) => perWeek >= 1.2
-    ? { key: 'approve', label: 'Lucky Socks approve 🧦', emoji: '🧦' }
-    : perWeek >= 0.4 ? { key: 'edge', label: 'Small edge 🍀', emoji: '🍀' }
-      : perWeek <= -1.2 ? { key: 'jinx', label: 'Jinx alert 🚨', emoji: '🚨' }
-        : perWeek <= -0.4 ? { key: 'cursed', label: 'Slightly cursed 🌧️', emoji: '🌧️' }
-          : { key: 'wash', label: 'Even steven 🤝', emoji: '🤝' };
+    ? { key: 'approve', label: 'Ice up, son', emoji: '🧊' }
+    : perWeek >= 0.4 ? { key: 'edge', label: 'Keep pounding', emoji: '🏈' }
+      : perWeek <= -1.2 ? { key: 'jinx', label: 'Fumble', emoji: '😬' }
+        : perWeek <= -0.4 ? { key: 'cursed', label: 'Shaky intel', emoji: '📡' }
+          : { key: 'wash', label: 'Dead even', emoji: '🤝' };
 
   function evaluateTrade({ mine, theirs, give, get, ctx, brief }) {
     const giveP = mine.filter((p) => give.includes(p.id)), getP = theirs.filter((p) => get.includes(p.id));
@@ -695,12 +695,12 @@
     const stamp = n.toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
     const untilUtc = until || '20270110T160000Z'; // Sun Jan 10 2027 11:00 AM ET = 16:00Z, inclusive
     const events = [
-      { key: 'thu', wd: 4, hour: 18, title: 'Thursday Night lineup check', desc: 'Thursday Night Football kicks off soon. Check injuries, set your lineup, and touch your lucky socks.' },
-      { key: 'sun', wd: 0, hour: 11, title: 'Sunday lineup lock', desc: 'Early games kick off at 1 PM ET. Final lineup check: questionable players, byes, and bench swaps.' },
+      { key: 'thu', wd: 4, hour: 18, title: 'Mission briefing: Thursday Night', desc: 'Thursday Night Football kicks off soon. Check injuries and lock your lineup.' },
+      { key: 'sun', wd: 0, hour: 11, title: 'Mission briefing: Sunday lock', desc: 'Early games kick off at 1 PM ET. Final lineup check: questionable players, byes, and bench swaps.' },
     ];
     const lines = [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Lucky Socks//Fantasy Lineup Reminders//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
-      'X-WR-CALNAME:Lucky Socks lineup reminders', 'X-WR-TIMEZONE:America/New_York',
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Agent 89//Fantasy Lineup Reminders//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'X-WR-CALNAME:Agent 89 lineup reminders', 'X-WR-TIMEZONE:America/New_York',
       'BEGIN:VTIMEZONE', 'TZID:America/New_York', 'X-LIC-LOCATION:America/New_York',
       'BEGIN:DAYLIGHT', 'TZOFFSETFROM:-0500', 'TZOFFSETTO:-0400', 'TZNAME:EDT', 'DTSTART:19700308T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU', 'END:DAYLIGHT',
       'BEGIN:STANDARD', 'TZOFFSETFROM:-0400', 'TZOFFSETTO:-0500', 'TZNAME:EST', 'DTSTART:19701101T020000', 'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU', 'END:STANDARD',
@@ -716,10 +716,10 @@
         `DTSTART;TZID=America/New_York:${date}T${hh}0000`,
         `DTEND;TZID=America/New_York:${date}T${hh}1500`,
         `RRULE:FREQ=WEEKLY;UNTIL=${untilUtc}`,
-        `SUMMARY:${icsEscape('🧦 ' + e.title + (leagueName ? ' — ' + leagueName : ''))}`,
-        `DESCRIPTION:${icsEscape(e.desc + (appUrl ? '\n\nOpen Lucky Socks: ' + appUrl : ''))}`,
+        `SUMMARY:${icsEscape('📋 ' + e.title + (leagueName ? ' — ' + leagueName : ''))}`,
+        `DESCRIPTION:${icsEscape(e.desc + (appUrl ? '\n\nOpen Agent 89: ' + appUrl : ''))}`,
         'STATUS:CONFIRMED', 'TRANSP:TRANSPARENT',
-        'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${icsEscape('Set your fantasy lineup! 🧦')}`, 'TRIGGER:PT0M', 'END:VALARM',
+        'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${icsEscape('Mission briefing: set your fantasy lineup.')}`, 'TRIGGER:PT0M', 'END:VALARM',
         'END:VEVENT'
       );
     }
@@ -727,20 +727,20 @@
     return lines.map(foldLine).join('\r\n') + '\r\n';
   }
 
-  // ---------------------------------------------------------------- superstition
+  // ---------------------------------------------------------------- scouting briefings (exported as SUPERSTITIONS for compatibility)
   const SUPERSTITIONS = [
-    { emoji: '🧦', title: 'The Lucky Socks', tip: 'Wear the same socks every week you win. Retire them the week you lose.', advice: 'Real advice: your lineup matters more than your laundry. Check injury reports Sunday morning.' },
-    { emoji: '🧢', title: 'Rally Cap', tip: 'Flip your hat inside out when your team is down on Sunday night.', advice: 'Real advice: if you are down, your last flexible move is a late-game starter swap on Monday.' },
-    { emoji: '🪵', title: 'Knock on Wood', tip: 'Knock on wood before saying your RB1 is healthy.', advice: 'Real advice: keep a handcuff or a strong bench RB for the day he is not.' },
-    { emoji: '😈', title: 'The Jinx', tip: 'Never say "I\'m up 40" before Monday Night. You know what happens.', advice: 'Real advice: players on a bye or OUT score zero. Check them first.' },
-    { emoji: '🔮', title: 'Never Trade a Draft Pick Rookie in Week 1', tip: 'The league remembers who you dumped.', advice: 'Real advice: trade for value, not feelings — compare rest-of-season output.' },
-    { emoji: '🍗', title: 'Wing Ritual', tip: 'Same wings, same couch, same cushion, every Sunday.', advice: 'Real advice: set a calendar reminder so you are not setting lineups from the wing line.' },
-    { emoji: '🐞', title: 'Ladybug Luck', tip: 'If a ladybug lands on your phone, start whoever you were going to bench.', advice: 'Real advice: bench players who project well below an eligible alternative.' },
-    { emoji: '🛑', title: 'Do Not Look at the Score', tip: 'Checking the live score is bad juju for your wide receivers.', advice: 'Real advice: do your lineup check Thursday and again before Sunday kickoff.' },
-    { emoji: '🧂', title: 'Salt Over the Shoulder', tip: 'Toss salt over your left shoulder after any trade offer.', advice: 'Real advice: balanced trades get accepted; lopsided ones get a salty reply.' },
-    { emoji: '📵', title: 'Phone Face-Down', tip: 'Flip your phone face-down during your opponent\'s big plays.', advice: 'Real advice: waiver claims run on a schedule — claim before the deadline, not after the drama.' },
-    { emoji: '🎰', title: 'Kicker Voodoo', tip: 'Start the kicker facing the opposite direction of the dome.', advice: 'Real advice: kickers are streamable — check the waiver wire each week.' },
-    { emoji: '🕯️', title: 'Light a Candle for Your Flex', tip: 'A lit candle on the flex spot lowers the odds of a dud.', advice: 'Real advice: your flex should be your highest-upside leftover, not the last guy you thought of.' },
+    { emoji: '🕵️', title: 'Agent 89', tip: 'The best GMs treat Sunday like a scouting trip: film first, feelings later.', advice: 'Real advice: check injury reports Sunday morning before you lock the lineup.' },
+    { emoji: '🧊', title: 'Ice up, son', tip: 'After a big win, stay cool. Don\'t spend next week\'s waiver on a celebration dart throw.', advice: 'Real advice: stream kickers and defenses week to week; don\'t hoard them out of loyalty.' },
+    { emoji: '🏈', title: 'The Helmet Catch', tip: 'A play isn\'t over until the whistle. Neither is your Monday night flex.', advice: 'Real advice: if you are down, your last flexible move is a late-game starter swap on Monday.' },
+    { emoji: '💙', title: 'Keep Pounding', tip: 'Same process every week. The boring GMs are the ones lifting the trophy.', advice: 'Real advice: set a calendar reminder so you check the lineup Thursday and again before Sunday kickoff.' },
+    { emoji: '🗂️', title: 'The Dossier', tip: 'Write the matchup down before you accept a trade. Ink beats vibes.', advice: 'Real advice: trade for rest-of-season value, not last week\'s box score.' },
+    { emoji: '🎯', title: 'Protect the Pocket', tip: 'Don\'t trade away your only startable QB unless the return is a true difference-maker.', advice: 'Real advice: a hole at a thin position hurts more than surplus at a deep one.' },
+    { emoji: '📺', title: 'Monday Night Nerve', tip: 'Never assume a 40-point lead survives a late kickoff.', advice: 'Real advice: players on a bye or OUT score zero. Check them first.' },
+    { emoji: '🧤', title: 'Handcuff Protocol', tip: 'If your RB1 is your season, his backup belongs on your bench, not the wire.', advice: 'Real advice: keep a handcuff or a strong bench RB for the day he is not healthy.' },
+    { emoji: '📡', title: 'Waiver Deadline', tip: 'Claims are won in the quiet hours, not after the group chat explodes.', advice: 'Real advice: waiver claims run on a schedule — claim before the deadline, not after the drama.' },
+    { emoji: '📋', title: 'Flex the Highest Upside', tip: 'The flex is not a participation trophy. Start the leftover with the best path to points.', advice: 'Real advice: your flex should be your highest-upside leftover, not the last guy you thought of.' },
+    { emoji: '😌', title: 'Eli Face', tip: 'One bad quarter does not end a career. Take a breath, then watch the film.', advice: 'Real advice: compare rest-of-season projections before you fire off a revenge trade.' },
+    { emoji: '📍', title: 'Mission Briefing', tip: 'Thursday night is your first checkpoint, Sunday morning is your last.', advice: 'Real advice: do your lineup check Thursday and again before Sunday kickoff.' },
   ];
   function pickSuperstition(rng) { const r = (rng || Math.random)(); return SUPERSTITIONS[Math.floor(r * SUPERSTITIONS.length) % SUPERSTITIONS.length]; }
 

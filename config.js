@@ -1,4 +1,4 @@
-// Lucky Socks config. Edit RELAY_URL after deploying worker/ (see worker/README.md), or paste it in the app under Leagues → Relay.
+// Agent 89 config. Edit RELAY_URL after deploying worker/ (see worker/README.md), or paste it in the app under Leagues → Relay.
 window.LUCKY_CONFIG = {
   // Cloudflare Worker that forwards ESPN cookies for PRIVATE leagues. Leave empty until deployed.
   RELAY_URL: 'https://lucky-socks-relay.ourhootshouse.workers.dev',

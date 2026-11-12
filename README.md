@@ -1,7 +1,7 @@
-# 🧦 Lucky Socks — fantasy football GM assistant
+# Agent 89 — fantasy football scouting desk
 
 Static PWA (plain HTML/CSS/JS, no build step) that reads your ESPN fantasy league straight from the browser and gives you
-lineup checks, trade grades, trade ideas and waiver add/drop picks — with a superstitious streak.
+lineup checks, trade grades, intel, and waiver add/drop picks — with a secret-agent, film-room tone.
 Publish the folder root to GitHub Pages (`ourhootshouse/lucky-socks`, `main` / root). All paths are relative.
 
 | File | Purpose |
@@ -28,4 +28,4 @@ node scripts/live.js 42654852 1    # prints a full analysis from the real ESPN A
 `/seasons/{season}?view=proTeamSchedules_wl`. Public leagues need no auth. Private leagues need `espn_s2` + `SWID`
 cookies and the relay Worker. Demo league = ESPN public test league **42654852** ("FFLR Test League", from the fflr R package docs).
 
-Not affiliated with ESPN or the NFL.
+Fan-made. Not affiliated with the NFL, ESPN, or any team.

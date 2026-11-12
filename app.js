@@ -1,4 +1,4 @@
-/* Lucky Socks UI. Pure DOM + string templates; all analysis lives in core.js, all ESPN I/O in espn.js. */
+/* Agent 89 UI. Pure DOM + string templates; all analysis lives in core.js, all ESPN I/O in espn.js. */
 (function () {
   'use strict';
   const C = window.LuckyCore, E = window.LuckyEspn, CFG = window.LUCKY_CONFIG || {};
@@ -65,10 +65,10 @@
       <div class="meta">${esc(p.pos)} · ${esc(p.team || '—')}${opp(p) ? ' · ' + esc(opp(p)) : ''}${o.extra ? ' · ' + o.extra : ''}</div></div>${right}</div>`;
   }
   function jinxMeter(j, label) {
-    return `<div class="jinx"><div class="bar"><div class="pin" style="left:${Math.max(3, Math.min(97, j))}%"></div></div>
-      <div class="lbls"><span>Blessed 😇</span><span><b>${esc(label || C.jinxLabel(j))}</b> · jinx ${Math.round(j)}%</span><span>Cursed 💀</span></div></div>`;
+    return `<div class="meter"><div class="bar"><div class="pin" style="left:${Math.max(3, Math.min(97, j))}%"></div></div>
+      <div class="lbls"><span>All clear</span><span><b>${esc(label || C.jinxLabel(j))}</b> · risk ${Math.round(j)}%</span><span>Red alert</span></div></div>`;
   }
-  const spinner = (t) => `<div class="card center"><span class="spin"></span>${esc(t || 'Rubbing the lucky socks…')}</div>`;
+  const spinner = (t) => `<div class="card center"><span class="spin"></span>${esc(t || 'Pulling the film…')}</div>`;
 
   // ------------------------------------------------------------------ explainers
   function privateExplainer(info, lg) {
@@ -103,7 +103,7 @@
       <li>Double-click the Value of <code>espn_s2</code> and <code>SWID</code> and copy each.</li>
     </ol>
     <p class="small"><b>Firefox:</b> DevTools (<b>F12</b>) → <b>Storage</b> → Cookies → espn.com.</p>
-    <p class="tiny muted">These cookies last about a year. If Lucky Socks says "private league" again later, copy fresh ones. Treat them like a password: anyone holding them can act as you on ESPN, so only paste them into a relay <i>you</i> deployed. You can do this on your phone too by copying them on a desktop and sending them to yourself via a password manager.</p>
+    <p class="tiny muted">These cookies last about a year. If Agent 89 says "private league" again later, copy fresh ones. Treat them like a password: anyone holding them can act as you on ESPN, so only paste them into a relay <i>you</i> deployed. You can do this on your phone too by copying them on a desktop and sending them to yourself via a password manager.</p>
   </details>`;
 
   // ------------------------------------------------------------------ loading
@@ -137,7 +137,7 @@
         `<div class="row wrap"><button class="btn" data-act="tab" data-tab="leagues">Add cookies / relay</button><button class="btn ghost" data-act="reload">Retry</button></div>`;
     }
     const tips = { relay: 'Check the relay URL under Leagues → Relay (and that your Worker is deployed).', notfound: 'Double-check the league ID and season.', network: 'Check your connection and try again.' };
-    return `<div class="card"><h2>Hmm, the socks tripped 🧦</h2><p>${esc(err.message)}</p><p class="muted small">${esc(tips[err.kind] || 'ESPN\'s unofficial API can be moody — try again in a minute.')}</p><button class="btn" data-act="reload">Try again</button></div>`;
+    return `<div class="card"><h2>Signal lost</h2><p>${esc(err.message)}</p><p class="muted small">${esc(tips[err.kind] || 'ESPN\'s unofficial API can be moody — try again in a minute.')}</p><button class="btn" data-act="reload">Try again</button></div>`;
   }
 
   function viewTeam() {
@@ -148,9 +148,9 @@
     const t = S.tip;
     const rec = `${me.record.w}-${me.record.l}${me.record.t ? '-' + me.record.t : ''}`;
     let check = '';
-    if (!lc.flags.length && !lc.moves.length) check = '<div class="notice good">✅ Lineup looks lucky — no byes, no injured starters, no better bench options.</div>';
+    if (!lc.flags.length && !lc.moves.length) check = '<div class="notice good">✅ Lineup is locked in — no byes, no injured starters, no better bench options.</div>';
     else {
-      check += `<div class="notice ${lc.moves.length ? 'warn' : ''}"><b>${lc.flags.length} thing${lc.flags.length === 1 ? '' : 's'} look jinxed.</b>${lc.gain >= 0.5 ? ` Fixing them is worth about <b>+${fmt(lc.gain)} projected pts</b> this week.` : ''}</div>`;
+      check += `<div class="notice ${lc.moves.length ? 'warn' : ''}"><b>${lc.flags.length} thing${lc.flags.length === 1 ? '' : 's'} need a second look.</b>${lc.gain >= 0.5 ? ` Fixing them is worth about <b>+${fmt(lc.gain)} projected pts</b> this week.` : ''}</div>`;
       check += '<ul class="why">' + lc.flags.map((f) => f.issues.map((i) => `<li class="${i.level === 'bad' ? 'bad' : 'warn'}"><b>${esc(f.player.name)}</b> (${esc(C.SLOT_NAMES[f.player.slotId])}) — ${esc(i.text)}</li>`).join('')).join('') + '</ul>';
       if (lc.moves.length) check += '<div class="sec">Suggested swaps</div><ul class="why">' + lc.moves.map((m) =>
         `<li class="good">${m.out ? `Bench <b>${esc(m.out.name)}</b>, ` : ''}start <b>${esc(m.in.name)}</b> at ${esc(m.slotName)} <span class="${cls(m.gain)}">(${sgn(m.gain)} proj)</span><br><span class="muted small">${esc(m.reason)}</span></li>`).join('') + '</ul>';
@@ -179,14 +179,14 @@
     const mineSorted = me.roster.slice().sort((a, b) => b.ros - a.ros);
     const theirsSorted = partner.roster.slice().sort((a, b) => b.ros - a.ros);
     const ready = T.give.size > 0 && T.get.size > 0;
-    return `<div class="card"><h2>Trade evaluator</h2><p class="muted small">Pick what you'd give and what you'd get. Lucky Socks scores your best starting lineup (rest of season) before vs after, for both teams.</p>
+    return `<div class="card"><h2>Trade evaluator</h2><p class="muted small">Pick what you'd give and what you'd get. Agent 89 scores your best starting lineup (rest of season) before vs after, for both teams.</p>
       <label class="lbl" for="partner">Trade partner</label>
       <select id="partner" class="field" data-change="partner">${others.map((t) => `<option value="${t.id}" ${t.id === partner.id ? 'selected' : ''}>${esc(t.name)}${t.owner ? ' — ' + esc(t.owner) : ''}</option>`).join('')}</select></div>
       <div class="cols">
         <div class="card"><h3>You give <span class="chip">${T.give.size}</span></h3><div class="players">${mineSorted.map((p) => playerRow(p, { pick: 'give', sel: T.give.has(String(p.id)), ros: true, noSlot: true })).join('')}</div></div>
         <div class="card"><h3>You get <span class="chip">${T.get.size}</span></h3><div class="players">${theirsSorted.map((p) => playerRow(p, { pick: 'get', sel: T.get.has(String(p.id)), ros: true, noSlot: true })).join('')}</div></div>
       </div>
-      <div class="row"><button class="btn grow" data-act="evaluate" ${ready ? '' : 'disabled'}>Ask the socks 🧦</button><button class="btn ghost" data-act="clear-trade">Clear</button></div>
+      <div class="row"><button class="btn grow" data-act="evaluate" ${ready ? '' : 'disabled'}>Grade this trade</button><button class="btn ghost" data-act="clear-trade">Clear</button></div>
       ${T.result ? tradeResultCard(T.result, partner) : ''}`;
   }
 
@@ -195,7 +195,7 @@
     const lineupRows = r.me.before.assign.map((a, i) => ({ slot: a.slotId, before: a.player, after: r.me.after.assign[i].player }))
       .filter((x) => (x.before && x.before.id) !== (x.after && x.after.id));
     return `<div class="card" id="result"><div class="verdict ${v.key}"><div class="v">${esc(v.label)}</div><div class="muted small">with ${esc(partner.name)}</div></div>
-      ${jinxMeter(r.jinx, 'Trade jinx')}
+      ${jinxMeter(r.jinx, 'Trade risk')}
       <div class="stat-grid"><div class="stat"><b class="${cls(r.me.perWeek)}">${sgn(r.me.perWeek)}</b><span>your pts/week</span></div>
         <div class="stat"><b class="${cls(r.me.delta)}">${sgn(r.me.delta)}</b><span>your ROS value Δ</span></div>
         <div class="stat"><b class="${cls(r.them.perWeek)}">${sgn(r.them.perWeek)}</b><span>their pts/week</span></div></div>
@@ -206,14 +206,14 @@
         <li>Each player's points-per-game = blend of ESPN's rest-of-season projection (45%), this week's projection (20%), season average (20%) and last-3-weeks form (15%); missing pieces are dropped and the rest re-weighted.</li>
         <li>× games left (from ESPN's NFL schedule, so byes count) × an availability factor (Questionable ×0.95, Doubtful ×0.8, OUT ×0.65, IR ×0.5).</li>
         <li>Positional scarcity: any starting slot you can't fill is assumed filled by a <b>waiver-level</b> player (the 3rd-best healthy free agent at that position), so surplus at a deep position is worth little and a hole at a thin one hurts.</li>
-        <li>Your value = best legal starting lineup (using your league's slots, incl. FLEX) over the rest of the season, plus a small credit for bench depth. Verdict is the change in that value per week (±1.2 pts/week = approve / jinx).</li>
+        <li>Your value = best legal starting lineup (using your league's slots, incl. FLEX) over the rest of the season, plus a small credit for bench depth. Verdict is the change in that value per week (±1.2 pts/week = Ice up, son / Fumble).</li>
       </ul></details></div>`;
   }
 
   // ------------------------------------------------------------------ views: Ideas
   function viewIdeas() {
     if (!S.L || !S.me) return loadingOrError('trade ideas');
-    if (!S.ideas) { setTimeout(() => { S.ideas = C.proposeTrades({ myTeam: S.me, teams: S.L.teams, ctx: S.L.ctx, max: 5 }); if (S.tab === 'ideas') render(); }, 30); return spinner('Scouting trade partners…'); }
+    if (!S.ideas) { setTimeout(() => { S.ideas = C.proposeTrades({ myTeam: S.me, teams: S.L.teams, ctx: S.L.ctx, max: 5 }); if (S.tab === 'ideas') render(); }, 30); return spinner('Gathering intel…'); }
     const { profile, ideas } = S.ideas;
     const mine = profile[S.me.id];
     const rows = C.POS_IDS.filter((p) => mine[p]).map((pid) => {
@@ -232,16 +232,16 @@
     }).join('');
     return `<div class="card"><h2>Position report</h2><p class="muted small">Starter strength = projected points per game from your starters at each position, compared with the league.</p>
       <table class="t"><tr><th>Pos</th><th>You</th><th>League avg</th><th>Rank</th><th>Verdict</th></tr>${rows}</table></div>
-      <div class="row between"><h2 class="mb0">Trade ideas</h2><button class="btn ghost small" data-act="refresh-ideas">↻ Re-scout</button></div>
+      <div class="row between"><h2 class="mb0">Intel</h2><button class="btn ghost small" data-act="refresh-ideas">↻ Re-scout</button></div>
       <p class="muted small">Plausible swaps: they improve your starting lineup without leaving the other team worse off by much.</p>
-      ${cards || '<div class="card center">Nothing both sides would like right now. Your lineup is already pretty lucky — or your league is stacked. Check Waivers!</div>'}`;
+      ${cards || '<div class="card center">Nothing both sides would like right now. Your roster is already tight — or the league is stacked. Check the scouting report on Waivers.</div>'}`;
   }
 
   // ------------------------------------------------------------------ views: Waivers
   function viewWaivers() {
     if (!S.L || !S.me) return loadingOrError('waiver wire');
     const W = S.waivers;
-    if (!W.recs) { setTimeout(() => { W.recs = C.proposeAddDrops({ roster: S.me.roster, pool: S.L.pool, ctx: S.L.ctx, max: 4 }); if (S.tab === 'waivers') render(); }, 30); return spinner('Scanning the wire…'); }
+    if (!W.recs) { setTimeout(() => { W.recs = C.proposeAddDrops({ roster: S.me.roster, pool: S.L.pool, ctx: S.L.ctx, max: 4 }); if (S.tab === 'waivers') render(); }, 30); return spinner('Running the scouting report…'); }
     const next = S.L.settings.waiverNext ? new Date(S.L.settings.waiverNext).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : null;
     const posIds = C.POS_IDS.filter((p) => S.L.pool.some((x) => x.posId === p));
     const list = C.rankFreeAgents(S.L.pool, S.L.ctx, W.pos || 0).slice(0, 15);
@@ -250,10 +250,10 @@
       <div class="sec">Add</div>${playerRow(r.add, { noSlot: true, ros: true, extra: r.add.status === 'WAIVERS' ? 'on waivers' : 'free agent' })}
       <div class="sec">Drop</div>${r.drop ? playerRow(r.drop, { noSlot: true, ros: true }) : '<div class="muted small">Nobody — you have an open roster spot.</div>'}
       <ul class="why">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('');
-    return `<div class="card"><h2>Waiver wire</h2>
+    return `<div class="card"><h2>Scouting report</h2>
       <p class="muted small"><span class="chip good">Free agent</span> = add instantly. <span class="chip warn">Waivers</span> = submit a claim; it clears on ESPN's next waiver run${next ? ` (<b>${esc(next)}</b>)` : ''}.</p></div>
       <h2>Recommended pickups &amp; drops</h2>
-      ${recs || '<div class="card center">No add/drop beats your current roster by a meaningful margin. Hold tight 🤞</div>'}
+      ${recs || '<div class="card center">No add/drop beats your current roster by a meaningful margin. Keep pounding.</div>'}
       <div class="card"><h2>Top available</h2><div class="chips"><button data-act="waiver-pos" data-pos="0" class="${!W.pos ? 'on' : ''}">All</button>${posIds.map((p) => `<button data-act="waiver-pos" data-pos="${p}" class="${W.pos === p ? 'on' : ''}">${C.POS[p]}</button>`).join('')}</div>
       <div class="players">${list.map((p) => playerRow(p, { noSlot: true, ros: true, extra: (status(p)) + (p.pctOwned != null ? ` <span class="muted">${r1(p.pctOwned)}% owned</span>` : '') })).join('')}</div>
       <p class="tiny muted">Ranked by expected rest-of-season points (ESPN projection blend × games left × health). Waiver-wire rankings come from the top ~35 free agents at each position, sorted by ESPN's projection.</p></div>`;
@@ -263,15 +263,15 @@
   function viewRemind() {
     const lg = activeLeague();
     const canInstall = !!window.__lsInstall;
-    return `<div class="card"><h2>Lineup reminders ⏰</h2>
-      <p>Web apps can't push notifications without a server, so Lucky Socks gives you two reliable options:</p>
+    return `<div class="card"><h2>Mission briefing</h2>
+      <p>Web apps can't push notifications without a server, so Agent 89 gives you two reliable options:</p>
       <h3>1 · Calendar alerts (works everywhere)</h3>
       <p class="small">Adds repeating events: <b>Thursdays 6:00 PM ET</b> (Thursday Night Football) and <b>Sundays 11:00 AM ET</b> (before the early games), each with an alert at the event time, running through <b>Jan 10, 2027</b>.</p>
       <button class="btn block" data-act="ics">📅 Add lineup reminders to my calendar (.ics)</button>
       <p class="tiny muted">Open the downloaded file to import it into Apple Calendar, Google Calendar, or Outlook.</p>
       <h3 class="mt">2 · Grok Bot reminder</h3>
       <p class="small">🤖 The Grok Bot lineup reminder is also set up, so you'll get a nudge there too.</p>
-      <h3 class="mt">Put Lucky Socks on your home screen</h3>
+      <h3 class="mt">Put Agent 89 on your home screen</h3>
       <p class="small"><b>iPhone:</b> Share → <b>Add to Home Screen</b>. <b>Android/Chrome:</b> menu → <b>Install app</b>.</p>
       ${canInstall ? '<button class="btn ghost" data-act="install">📲 Install app</button>' : ''}
       ${lg ? '' : '<p class="tiny muted">Tip: connect a league first and the calendar events will carry its name.</p>'}</div>`;
@@ -293,7 +293,7 @@
         <button class="btn block mt" data-act="save-league" ${c.teamId ? '' : 'disabled'}>Use this team</button></div>`;
     }
     const errBox = c.error ? (c.error.kind === 'private' ? privateExplainer(c.error, null) : `<div class="notice bad">${esc(c.error.message || c.error)}</div>`) : '';
-    return `${S.leagues.length ? '' : `<div class="hero"><div class="big">🧦</div><h1>Lucky Socks</h1><p>Your fantasy football GM assistant — lineup checks, trade grades, trade ideas and waiver picks, with a healthy respect for superstition.</p></div>`}
+    return `${S.leagues.length ? '' : `<div class="hero"><div class="big"><span class="badge89">89</span></div><h1>Agent 89</h1><p>Your fantasy football scouting desk — lineup checks, trade grades, intel, and waiver pickups.</p></div>`}
       <div class="card"><h2>Connect your ESPN league</h2>
         <label class="lbl" for="cin">League link or ID</label>
         <input id="cin" type="text" inputmode="url" autocomplete="off" autocapitalize="off" placeholder="https://fantasy.espn.com/football/team?leagueId=123456&teamId=3" data-bind="input" value="${esc(c.input)}">
@@ -384,7 +384,7 @@
     const ics = C.buildIcs({ leagueName: lg && lg.name, leagueId: lg && lg.leagueId, now: new Date(), appUrl: location.href.split('#')[0].split('?')[0].replace(/index\.html$/, '') });
     const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
     const a = document.createElement('a');
-    a.href = url; a.download = 'lucky-socks-lineup-reminders.ics';
+    a.href = url; a.download = 'agent-89-lineup-reminders.ics';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
@@ -449,7 +449,7 @@
   let theme = store.get('ls.theme', null);
   if (!theme) theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   applyTheme(theme);
-  $('#themeBtn').addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; store.set('ls.theme', theme); applyTheme(theme); const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = theme === 'dark' ? '#0f1220' : '#f6f4ff'; });
+  $('#themeBtn').addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; store.set('ls.theme', theme); applyTheme(theme); const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = theme === 'dark' ? '#070d18' : '#eef3f8'; });
 
   // PWA
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); window.__lsInstall = e; if (S.tab === 'remind') render(); });

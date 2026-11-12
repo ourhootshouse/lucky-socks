@@ -1,4 +1,4 @@
-/* Lucky Socks ESPN client. Public leagues are fetched straight from ESPN (CORS ok);
+/* Agent 89 ESPN client. Public leagues are fetched straight from ESPN (CORS ok);
  * private leagues (with cookies) go through the user's relay Worker. */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./core.js'));

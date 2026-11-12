@@ -1,5 +1,5 @@
-// Lucky Socks service worker: caches the app shell only. ESPN / relay requests are never cached or intercepted.
-const CACHE = 'lucky-socks-v1';
+// Agent 89 service worker: caches the app shell only. ESPN / relay requests are never cached or intercepted.
+const CACHE = 'agent-89-v1';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'core.js', 'espn.js', 'config.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {
