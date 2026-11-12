@@ -27,9 +27,7 @@ forwards them to ESPN as cookies and returns the JSON.
    Wrangler prints your URL, e.g. `https://lucky-socks-relay.<your-subdomain>.workers.dev`.
 3. Check it: `curl -H "Origin: http://localhost" https://lucky-socks-relay.<your-subdomain>.workers.dev/health`
    should return `{"ok":true,"service":"lucky-socks-relay"}`.
-4. Tell the app about it, either:
-   - edit `RELAY_URL` in `luckysocks/config.js` (commit + push), **or**
-   - open the app → **Leagues** tab → *Relay URL* → paste the Worker URL → Save (stored in this browser only).
+4. Put the Worker URL in `RELAY_URL` in `luckysocks/config.js` (commit + push). The Leagues tab uses it automatically and hides the URL field. If `RELAY_URL` is empty, the field still appears so you can paste one. A `?relay=1` query param also shows the field as an escape hatch; a leftover `ls.relay` value never overrides a set `RELAY_URL`.
 
 To allow another site (e.g. a custom domain), change `ALLOWED_ORIGINS` in `wrangler.toml` and run `wrangler deploy` again.
 
