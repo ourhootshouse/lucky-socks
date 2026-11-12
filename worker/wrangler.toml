@@ -1,0 +1,10 @@
+name = "lucky-socks-relay"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[vars]
+# Comma-separated origins allowed to call the relay (localhost is always allowed for testing
+# unless ALLOW_LOCALHOST = "false").
+ALLOWED_ORIGINS = "https://ourhootshouse.github.io"
+ALLOW_LOCALHOST = "true"
