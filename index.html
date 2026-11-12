@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lucky Socks 🧦 — Fantasy Football GM</title>
+<meta name="description" content="A superstitious fantasy football GM assistant: lineup checks, trade grades, trade ideas and waiver picks for your ESPN league.">
+<meta name="theme-color" content="#0f1220">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lucky Socks">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="sock">🧦</span><div><b>Lucky Socks</b><small>fantasy GM, minus the bad juju</small></div></div>
+  <div class="top-right">
+    <select id="leagueSwitch" aria-label="Switch league" hidden></select>
+    <button id="themeBtn" class="icon-btn" aria-label="Toggle light/dark mode" title="Toggle light/dark">🌓</button>
+  </div>
+</header>
+<nav class="tabs" id="tabs" aria-label="Sections">
+  <button data-tab="team"><i>📋</i><span>Team</span></button>
+  <button data-tab="trade"><i>🔁</i><span>Trade</span></button>
+  <button data-tab="ideas"><i>💡</i><span>Ideas</span></button>
+  <button data-tab="waivers"><i>🧲</i><span>Waivers</span></button>
+  <button data-tab="remind"><i>⏰</i><span>Remind</span></button>
+  <button data-tab="leagues"><i>🏈</i><span>Leagues</span></button>
+</nav>
+<main id="view" aria-live="polite"></main>
+<footer class="foot">Not affiliated with ESPN or the NFL.<br><span>Lucky Socks reads your league from ESPN's unofficial API. Advice is for fun; your socks are your own responsibility.</span></footer>
+<noscript><p style="padding:1rem">Lucky Socks needs JavaScript. Sorry — the socks can't do it alone.</p></noscript>
+<script src="config.js"></script>
+<script src="core.js"></script>
+<script src="espn.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
