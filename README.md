@@ -9,7 +9,7 @@ Publish the folder root to GitHub Pages (`ourhootshouse/lucky-socks`, `main` / r
 | `index.html`, `styles.css`, `app.js` | UI (mobile-first, dark/light) |
 | `core.js` | All analysis: parsers, value model, lineup check, trade scoring, trade ideas, add/drop, .ics (unit-tested) |
 | `espn.js` | ESPN API client (direct for public leagues, via relay for private leagues) |
-| `config.js` | `RELAY_URL` (fill after deploying the Worker), demo league id |
+| `config.js` | `RELAY_URL` (built-in private-league Worker), demo league id |
 | `worker/` | Cloudflare Worker relay for private leagues (see `worker/README.md`) |
 | `sw.js`, `manifest.webmanifest`, `icons/` | PWA (installable, offline app shell; ESPN calls are never cached) |
 | `test/` | `node --test` unit tests (core + worker) |

@@ -19,11 +19,17 @@
     trade: { partner: null, give: new Set(), get: new Set(), result: null },
     ideas: null, waivers: { recs: null, pos: 0 },
     connect: { input: '', s2: '', swid: '', teams: null, settings: null, leagueId: null, season: null, teamId: null, busy: false, error: null, openPriv: false, note: '' },
-    relayTest: '',
+    relayTest: '', relayHealth: '',
   };
   const saveLeagues = () => { store.set('ls.leagues', S.leagues); store.set('ls.active', S.activeKey); };
   const activeLeague = () => S.leagues.find((l) => l.key === S.activeKey) || null;
-  const relayUrl = () => (store.get('ls.relay', '') || CFG.RELAY_URL || '').trim();
+  const configRelay = () => (CFG.RELAY_URL || '').trim();
+  const showRelayField = () => !configRelay() || new URLSearchParams(location.search).get('relay') === '1';
+  const relayUrl = () => {
+    const cfg = configRelay();
+    if (cfg) return cfg; // a set config URL always wins; never let a leftover ls.relay override it
+    return (store.get('ls.relay', '') || '').trim();
+  };
   const cfgFor = (lg) => ({ relayUrl: relayUrl(), creds: lg && lg.creds ? lg.creds : null });
   const season = (lg) => (lg && lg.season) || CFG.SEASON || C.currentSeason();
 
@@ -76,14 +82,14 @@
     const hasCreds = !!info.hasCreds, relay = relayUrl();
     let head = 'This league is private 🔒';
     let state = '';
-    if (hasCreds && !relay) state = '<div class="notice warn"><b>Cookies saved, but no relay is set up yet.</b> Browsers can\'t send your ESPN cookies to ESPN from another site, so private leagues need the small relay Worker. Deploy <code>worker/</code> (instructions in its README), then paste its URL under <b>Leagues → Relay</b>.</div>';
+    if (hasCreds && !relay) state = '<div class="notice warn"><b>Cookies saved, but the private-league relay is not configured.</b> Agent 89 needs a relay to reach private ESPN leagues.</div>';
     else if (hasCreds && info.viaRelay) state = '<div class="notice bad"><b>ESPN rejected those cookies.</b> They may be expired, copied from the wrong account, or missing a character. Re-copy <code>espn_s2</code> and <code>SWID</code> (steps below) and try again.</div>';
     else if (!hasCreds) state = '<div class="notice warn">ESPN said <b>"not authorized"</b> — that\'s what private leagues look like to an outside website.</div>';
     return `<div class="card"><h2>${head}</h2>${state}
       <h3>Option A — easiest (needs the league manager)</h3>
       <p class="small">On a <b>desktop browser</b> (the ESPN app doesn't have this), the league manager opens the league, goes to <b>LM Tools → Basic Settings → Edit</b>, sets <b>"Make League Viewable to Public"</b> to <b>Yes</b>, and saves. Nobody can join or change anything — they can only view. Then reconnect here with just the league link.</p>
       <h3>Option B — your own private cookies</h3>
-      <p class="small">Paste your <code>espn_s2</code> and <code>SWID</code> cookies below. They're stored only in this browser and sent only to your own relay Worker. ${relay ? '' : '<b>You\'ll also need the relay URL</b> (Leagues → Relay).'}</p>
+      <p class="small">Paste your <code>espn_s2</code> and <code>SWID</code> cookies below. They're stored only in this browser and used only to read your private leagues.${relay ? '' : ' The private-league relay is not configured yet, so this path cannot load.'}</p>
       ${lg ? '' : ''}</div>`;
   }
 
@@ -103,7 +109,7 @@
       <li>Double-click the Value of <code>espn_s2</code> and <code>SWID</code> and copy each.</li>
     </ol>
     <p class="small"><b>Firefox:</b> DevTools (<b>F12</b>) → <b>Storage</b> → Cookies → espn.com.</p>
-    <p class="tiny muted">These cookies last about a year. If Agent 89 says "private league" again later, copy fresh ones. Treat them like a password: anyone holding them can act as you on ESPN, so only paste them into a relay <i>you</i> deployed. You can do this on your phone too by copying them on a desktop and sending them to yourself via a password manager.</p>
+    <p class="tiny muted">These cookies last about a year. If Agent 89 says "private league" again later, copy fresh ones. Treat them like a password: anyone holding them can act as you on ESPN, so don't share them. You can do this on your phone too by copying them on a desktop and sending them to yourself via a password manager.</p>
   </details>`;
 
   // ------------------------------------------------------------------ loading
@@ -134,9 +140,9 @@
     if (err.kind === 'private') {
       const lg = activeLeague();
       return privateExplainer(err, lg) + COOKIE_HELP +
-        `<div class="row wrap"><button class="btn" data-act="tab" data-tab="leagues">Add cookies / relay</button><button class="btn ghost" data-act="reload">Retry</button></div>`;
+        `<div class="row wrap"><button class="btn" data-act="tab" data-tab="leagues">Add cookies</button><button class="btn ghost" data-act="reload">Retry</button></div>`;
     }
-    const tips = { relay: 'Check the relay URL under Leagues → Relay (and that your Worker is deployed).', notfound: 'Double-check the league ID and season.', network: 'Check your connection and try again.' };
+    const tips = { relay: 'The private-league relay could not be reached. Try again in a minute.', notfound: 'Double-check the league ID and season.', network: 'Check your connection and try again.' };
     return `<div class="card"><h2>Signal lost</h2><p>${esc(err.message)}</p><p class="muted small">${esc(tips[err.kind] || 'ESPN\'s unofficial API can be moody — try again in a minute.')}</p><button class="btn" data-act="reload">Try again</button></div>`;
   }
 
@@ -278,10 +284,34 @@
   }
 
   // ------------------------------------------------------------------ views: Leagues / connect
+  function relayStatusLine() {
+    if (S.relayHealth === 'ok') return '<p class="tiny muted relay-status">Private leagues: secure relay connected ✓</p>';
+    if (S.relayHealth === 'fail') return '<p class="tiny muted relay-status">Private leagues: relay unreachable</p>';
+    if (S.relayHealth === 'checking') return '<p class="tiny muted relay-status">Private leagues: checking relay…</p>';
+    return '';
+  }
+  function relayCard() {
+    if (!showRelayField()) return relayStatusLine();
+    const relay = relayUrl();
+    const relaySource = configRelay() ? 'from config.js' : (store.get('ls.relay', '') ? 'saved in this browser' : 'not set');
+    return `<div class="card"><h2>Relay (private leagues)</h2>
+      <p class="small muted">A tiny Cloudflare Worker that forwards your ESPN cookies for private leagues. Public leagues never use it.</p>
+      <label class="lbl" for="relay">Relay URL</label><input id="relay" type="url" autocomplete="off" placeholder="https://lucky-socks-relay.your-name.workers.dev" value="${esc(configRelay() || store.get('ls.relay', ''))}">
+      <div class="tiny muted">Currently: <b>${relay ? esc(relay) : 'none'}</b> (${relaySource})</div>
+      <div class="row mt wrap">${configRelay() ? '' : '<button class="btn ghost small" data-act="relay-save">Save</button>'}<button class="btn ghost small" data-act="relay-test" ${relay ? '' : 'disabled'}>Test</button>${S.relayTest ? `<span class="small">${esc(S.relayTest)}</span>` : ''}</div></div>`;
+  }
+  function checkRelayHealth() {
+    const url = relayUrl();
+    if (!url) { S.relayHealth = ''; return; }
+    S.relayHealth = 'checking';
+    fetch(url.replace(/\/+$/, '') + '/health', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => { S.relayHealth = j && j.ok ? 'ok' : 'fail'; if (S.tab === 'leagues') render(); })
+      .catch(() => { S.relayHealth = 'fail'; if (S.tab === 'leagues') render(); });
+  }
   function viewLeagues() {
     const c = S.connect;
     const relay = relayUrl();
-    const relaySource = store.get('ls.relay', '') ? 'saved in this browser' : CFG.RELAY_URL ? 'from config.js' : 'not set';
     const saved = S.leagues.map((l) => `<div class="pl"><div class="grow"><div class="nm">${esc(l.name || 'League ' + l.leagueId)}${l.demo ? ' <span class="chip info">demo</span>' : ''}${l.key === S.activeKey ? ' <span class="chip good">active</span>' : ''}</div>
       <div class="meta">ID ${esc(l.leagueId)} · team ${esc(l.teamName || l.teamId)} · season ${esc(season(l))}${l.creds ? ` · 🔒 <span class="mono">${esc(C.maskSecret(l.creds.s2))}</span>` : ''}</div></div>
       <div class="row"><button class="btn small ${l.key === S.activeKey ? 'ghost' : ''}" data-act="use-league" data-key="${esc(l.key)}">${l.key === S.activeKey ? 'Reload' : 'Open'}</button>
@@ -299,11 +329,11 @@
         <input id="cin" type="text" inputmode="url" autocomplete="off" autocapitalize="off" placeholder="https://fantasy.espn.com/football/team?leagueId=123456&teamId=3" data-bind="input" value="${esc(c.input)}">
         <p class="tiny muted">Open your team on fantasy.espn.com and copy the URL from the address bar. A bare league ID works too.</p>
         <details ${c.openPriv ? 'open' : ''} id="priv"><summary>🔒 Private league? Add your cookies</summary>
-          <p class="small">Leagues that aren't public need your <code>espn_s2</code> and <code>SWID</code> cookies, sent through your relay Worker.</p>
+          <p class="small">Leagues that aren't public need your <code>espn_s2</code> and <code>SWID</code> cookies.</p>
           <label class="lbl" for="s2">espn_s2</label><input id="s2" type="password" autocomplete="off" placeholder="AEB…" data-bind="s2" value="${esc(c.s2)}">
           <label class="lbl" for="swid">SWID</label><input id="swid" type="password" autocomplete="off" placeholder="{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}" data-bind="swid" value="${esc(c.swid)}">
           ${c.s2 ? `<p class="tiny muted">Entered: <span class="mono">${esc(C.maskSecret(c.s2))}</span> · <span class="mono">${esc(C.maskSecret(c.swid))}</span></p>` : ''}
-          ${relay ? '' : '<div class="notice warn small">No relay URL yet — private leagues won\'t load until you add one below.</div>'}
+          ${!relay && showRelayField() ? '<div class="notice warn small">No relay URL yet — private leagues won\'t load until you add one below.</div>' : ''}
           ${COOKIE_HELP}
         </details>
         <div class="row mt"><button class="btn grow" data-act="lookup" ${c.busy ? 'disabled' : ''}>${c.busy ? '<span class="spin"></span>Looking…' : 'Find my league'}</button>
@@ -312,11 +342,7 @@
       </div>
       ${teamPick}
       ${S.leagues.length ? `<div class="card"><h2>Your leagues</h2><div class="players">${saved}</div></div>` : ''}
-      <div class="card"><h2>Relay (private leagues)</h2>
-        <p class="small muted">A tiny Cloudflare Worker you deploy (see <code>worker/README.md</code>) that forwards your ESPN cookies. Public leagues never use it.</p>
-        <label class="lbl" for="relay">Relay URL</label><input id="relay" type="url" autocomplete="off" placeholder="https://lucky-socks-relay.your-name.workers.dev" value="${esc(store.get('ls.relay', ''))}">
-        <div class="tiny muted">Currently: <b>${relay ? esc(relay) : 'none'}</b> (${relaySource})</div>
-        <div class="row mt wrap"><button class="btn ghost small" data-act="relay-save">Save</button><button class="btn ghost small" data-act="relay-test" ${relay ? '' : 'disabled'}>Test</button>${S.relayTest ? `<span class="small">${esc(S.relayTest)}</span>` : ''}</div></div>`;
+      ${relayCard()}`;
   }
 
   // ------------------------------------------------------------------ render + routing
@@ -425,7 +451,10 @@
     } else if (a === 'waiver-pos') { S.waivers.pos = Number(el.dataset.pos); render(); }
     else if (a === 'ics') downloadIcs();
     else if (a === 'install' && window.__lsInstall) { window.__lsInstall.prompt(); window.__lsInstall = null; render(); }
-    else if (a === 'relay-save') { const v = $('#relay').value.trim().replace(/\/+$/, ''); if (v) store.set('ls.relay', v); else store.del('ls.relay'); S.relayTest = v ? 'Saved.' : 'Cleared.'; render(); }
+    else if (a === 'relay-save') {
+      if (configRelay()) { S.relayTest = 'Using the built-in relay.'; render(); return; }
+      const v = $('#relay').value.trim().replace(/\/+$/, ''); if (v) store.set('ls.relay', v); else store.del('ls.relay'); S.relayTest = v ? 'Saved.' : 'Cleared.'; render();
+    }
     else if (a === 'relay-test') {
       S.relayTest = 'Testing…'; render();
       fetch(relayUrl().replace(/\/+$/, '') + '/health', { cache: 'no-store' }).then((r) => r.json()).then((j) => { S.relayTest = j && j.ok ? '✅ Relay is up' : '⚠️ Unexpected reply'; render(); })
@@ -461,5 +490,7 @@
   window.__luckySocks = { S, go, render };
 
   // boot
+  if (configRelay() && store.get('ls.relay', '')) store.del('ls.relay');
+  checkRelayHealth();
   if (S.activeKey && activeLeague()) { S.tab = 'team'; loadActive(); } else { S.tab = 'leagues'; render(); }
 })();

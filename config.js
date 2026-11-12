@@ -1,6 +1,6 @@
-// Agent 89 config. Edit RELAY_URL after deploying worker/ (see worker/README.md), or paste it in the app under Leagues → Relay.
+// Agent 89 config. RELAY_URL is the private-league Worker (see worker/README.md). Leave it empty only if you have not deployed one.
 window.LUCKY_CONFIG = {
-  // Cloudflare Worker that forwards ESPN cookies for PRIVATE leagues. Leave empty until deployed.
+  // Built-in Cloudflare Worker that forwards ESPN cookies for PRIVATE leagues. The Leagues tab uses this automatically.
   RELAY_URL: 'https://lucky-socks-relay.ourhootshouse.workers.dev',
   // Public ESPN league used by "Try with a demo league" (fflr package's public test league, 4 teams).
   DEMO_LEAGUE_ID: '42654852',

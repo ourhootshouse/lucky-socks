@@ -122,3 +122,4 @@ table.t td { padding: 7px 6px; border-top: 1px solid var(--line); }
   #leagueSwitch { order: 3; flex: 1 0 100%; max-width: none; width: 100%; min-height: 38px; }
 }
 html { scroll-padding-top: 130px; scroll-padding-bottom: 100px; }
+.relay-status { text-align: center; margin: 2px 0 10px; opacity: .85; }
